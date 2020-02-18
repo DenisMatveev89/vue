@@ -1,0 +1,198 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>Webstor Vue</title>
+    <meta charset="UTF8">
+    <!-- <meta name="viewport" content="width=device-width, initial-scale=1"> -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script> -->
+    <link rel="stylesheet" href="style.css">
+<!--     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" crossorigin="anonymous"> -->
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.16.2/axios.js"></script> 
+
+     
+</head>
+
+<body>
+    <div id="app">
+    <div class="container">
+        <header>
+            <div class="page-header">
+                <div class="nav navbar-nav navbar-right cart">
+                    <button type="button" class="btn btn-default btn-lg" v-on:click="showCheckout">
+                        <span class="glyphicon glyphicon-shopping-cart">
+                            {{cartItemCount}}
+                        </span>
+                        Корзина
+                    </button>
+                </div>
+                <h1>{{sitename}}</h1>
+            </div>
+        </header>
+    </div>
+        <main>
+        <div class="container">
+            <div class="row_product">
+                
+                <!-------------- V-IF ---------------------->
+                <div v-if="showProduct">
+                    <div v-for="product in products">
+                    <div class="row">
+                    <div class="col-md-5 col-md-offset-0">
+                        <figure>
+                            <img class="product" v-bind:src="product.image">
+                        </figure>
+                    </div>
+                    <div class="col-md-6 col-md-offset-0 description">
+                        <h1 v-text="product.title"></h1>
+                        <p v-html="product.description"></p>
+                        <p class="price">{{product.price}} $ </p>
+                        <!-- кнопка добавления в корзину -->
+
+                        <button class="btn btn-primary btn-lg" v-on:click="addToCart(product)" v-if="canAddToCart(product)">
+                            В корзину
+                        </button>
+                        <button disabled="true" class="btn btn-primary btn-lg" v-else>
+                            В корзину
+                        </button>
+                        <span class="inventory-message" v-if="product.availableInventory - cartCount(product.id) === 0">
+                            Данный товар закончился
+                        </span>
+                        
+                        <span class="inventory-message" v-else-if="product.availableInventory - cartCount(product.id) < 5">
+                            Осталось {{product.availableInventory - cartCount(product.id)}} шт.
+                        </span>
+                        
+                        <span class="inventory-message" v-else>
+                            Купите сейчас!
+                        </span>
+
+                      <!--   <button class="btn btn-primary btn-lg" v-on:click="addToCart(product)" v-if="canAddToCart(product.id)">Add to cart</button>
+
+                        <button disabled="true" class=" btn btn-primary btn-lg" v-else>Add to cart</button>
+
+                        <span class="inventory-message" v-if="product.availableInventory - cartCount(product.id) === 0">All Out!
+                        </span>
+
+                        <span class="inventory-message" v-else-if="product.availableInventory - cartCount(product.id) < 5">
+                          Only {{product.availableInventory - cartCount(product.id)}} left!
+                        </span>
+
+                        <span class="inventory-message" v-else>Buy Now!
+                        </span> -->
+
+                        <div class="rating">
+                            <span v-bind:class="{'rating-active':checkRating(n, product)}" v-for="n in 5">☆</span>
+                        </div>
+                    </div><!-- ./col col-expend -->
+                    </div><!--./class row product-->
+                </div> <!-- v-for --> 
+                </div> <!-- ./v-if ---->
+                
+
+
+
+                <!------------------- V-ELSE -------------------->
+                <div v-else>
+                    <div class="row">
+                    <div class="col-md-6">
+                        <strong>First Name:</strong>
+                        <!-- .trim УБИРАЕТ ЛИШНИЕ ПРОБЕЛЫ -->
+                        <input v-model.trim="order.firstName" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Last Name:</strong>
+                        <input v-model.trim="order.lastName" class="form-control" />
+                    </div>
+                    <div class="form-goup">
+                        <div class="col-md-12"><strong>Adress: </strong></div>
+                        <div class="col-md-12"><input v-model.trim="order.adress" class="form-control" /></div>
+                    </div>
+                    <div class="form-goup">
+                        <div class="col-md-12"><strong>City: </strong></div>
+                        <div class="col-md-12"><input v-model.trim="order.city" class="form-control" /></div>
+                    </div>
+                    <!-- ВЫБОР -->
+                    <div class="form-group">
+                        <div class="col-md-2">
+                            <strong>State: </strong>
+                            <select v-model="order.state" class="form-control">
+                                <option disabled value="">State</option>
+                                <!-- ВМЕСТО СПИСКА ШТАТОВ - АВТОМАТИЧЕСКИЙ ПЕРЕБОР ИЗ МАССИВА -->
+                               <!--  <option v-for="(state, key) in states"
+                                v-bind:value="state">
+                                {{key}}
+                                </option> -->
+
+                                <option v-bind:value="states.AL">AL</option>
+                                <option v-bind:value="states.AR">AR</option>
+                                <option v-bind:value="states.CA">CA</option>
+                                <option v-bind:value="states.NV">NV</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-6 col-md-offset-4">
+                            <strong>Zip / Postal Code: </strong>
+                            <input v-model.number="order.zip" class="form-control" />
+                        </div>
+                    </div>
+                    <!-- Метки на работу или домой -->
+                    <div class="form-group">
+                        <div class="col-md-6 boxes">
+                            <input type="radio" id="home" value="Home" v-model="order.method" />
+                            <label for="home">Home</label>
+                            <input type="radio" id="business" value="Business" v-model="order.method" />
+                            <label for="business">Bussines</label>
+                        </div>
+                    </div>
+                    <!-- ГАЛКА ПОДАРОЧНОЙ УПАКОВКИ -->
+                    <div class="form-group">
+                        <div class="col-md-6 boxes">
+                            <input type="checkbox"
+                            id="gift" value="true"
+                            v-bind:true-value="order.sendGift"
+                            v-bind:false-value="order.dontSendGift"
+                            v-model="order.gift">
+                            <label for="gift">Ship As Gift</label>
+                        </div>
+                    </div>
+                    <!-- КНОПКА ЗАКАЗА -->
+                    <div class="form-group">
+                        <div class="col-md-6">
+                            <button type="submit" class="btn btn-primary submit" v-on:click="submitForm">
+                                Place order
+                            </button>
+                        </div>
+                    </div>
+                    <!-- ДИНАМИЧЕСКОЕ ОКНО С ДАННЫМИ О ЗАКАЗЕ -->
+                    <div class="well" verify>
+                        <pre>
+                            First Name: {{order.firstName}}
+                            Last Name: {{order.lastName}}
+                            Adress: {{order.adress}}
+                            City: {{order.city}}
+                            ZIP: {{order.zip}}
+                            State: {{order.state}}
+                            Method: {{order.method}}
+                            Gift: {{order.gift}}
+                            
+                        </pre>
+                    </div>
+                    </div>
+                </div><!-- ./IF-ELSE -->
+        </div>  <!-- /.row_product -->
+            </div>
+            <!-- ./Div container -->
+        </main>
+    </div><!-- ./div app -->
+
+    <script src="https://unpkg.com/vue"></script>
+    <script src="javascript.js"></script>
+    
+</body>
+
+</html>
